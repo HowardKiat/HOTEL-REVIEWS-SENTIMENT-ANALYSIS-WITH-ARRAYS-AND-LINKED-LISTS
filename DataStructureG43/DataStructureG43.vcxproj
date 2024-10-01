@@ -127,17 +127,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="FileReader.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="Review.cpp" />
-    <ClCompile Include="SentimentAnalysis.cpp" />
-    <ClCompile Include="WordList.cpp" />
+    <ClCompile Include="mainArray.cpp" />
+    <ClCompile Include="sentiment_analysis.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="FileReader.hpp" />
-    <ClInclude Include="Review.hpp" />
-    <ClInclude Include="SentimentAnalysis.hpp" />
-    <ClInclude Include="WordList.hpp" />
+    <ClInclude Include="sentiment_analysis.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
