@@ -1,7 +1,8 @@
 #include "sentiment_analysis.hpp"
 #include <iostream>
 
-int main() {
+int main()
+{
     // Create an instance of the SentimentAnalysis class on the heap
     SentimentAnalysis* analysis = new SentimentAnalysis();
 

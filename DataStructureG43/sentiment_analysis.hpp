@@ -11,29 +11,31 @@ using std::string;
 
 #define MAX_WORDS 1000
 #define MAX_REVIEWS 100
-#define MAX_FREQUENCIES 1000  // Maximum distinct words we might track
+#define MAX_FREQUENCIES 1000  // Maximum unique words tracked
 
-struct Review {
-    string review;  // The text of the review
-    int rating;     // The rating given by the user
+struct Review 
+{
+    string review;  
+    int rating;    
 
-    Review() : review(""), rating(0) {} // Constructor to initialize members
+    Review() : review(""), rating(0) {} 
 
 };
 
-class SentimentAnalysis {
+class SentimentAnalysis
+{
 private:
-    Review* reviewList;                        // Dynamically allocated array for reviews
-    int reviewCount;                           // Number of reviews
-    string positiveWords[MAX_WORDS];           // Array for positive words
-    string negativeWords[MAX_WORDS];           // Array for negative words
-    int positiveWordCount;                     // Number of positive words
-    int negativeWordCount;                     // Number of negative words
+    Review* reviewList;                             // Dynamically allocated array for the reviews in the list
+    int reviewCount;                                // Number of reviews
+    string positiveWords[MAX_WORDS];                // Array for positive words
+    string negativeWords[MAX_WORDS];                // Array for negative words
+    int positiveWordCount;                          // Number of positive words
+    int negativeWordCount;                          // Number of negative words
 
     // Arrays to track word frequencies
-    string frequencyWords[MAX_FREQUENCIES];    // Array of words to track frequency
-    int frequencyCounts[MAX_FREQUENCIES];       // Corresponding counts for the words
-    int uniqueWordCount;                        // Current number of unique words
+    string trackWordsFrequency[MAX_FREQUENCIES];    // Tracks the Word Appearance Frequency
+    int trackWordFrequencyCounts[MAX_FREQUENCIES];  // Corresponding counts for the words
+    int individualWordCount;                        // Current number of individual words
 
 public:
     // Constructor
@@ -52,7 +54,7 @@ public:
     //Loaf CSV file
     void loadCSV(const char* filename);
 
-    // Add reviews manually (for testing)
+    // Add reviews one by one
     void addReview(const string& reviewText, int rating);
 
     // Analyze sentiment of all reviews
@@ -67,7 +69,6 @@ public:
     // Overall analysis across all reviews
     void calculateOverallSentiment();
 
-    // Utility functions
     bool wordExists(const string& word, const string wordList[], int wordCount);
     void updateWordFrequency(const string& word);
 
