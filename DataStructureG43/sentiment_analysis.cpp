@@ -2,7 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <algorithm> // For std::transform
+#include <cctype>
 
 using namespace std;
 
@@ -47,8 +47,7 @@ void SentimentAnalysis::loadNegativeWords() {
 }
 
 // Load CSV File
-void SentimentAnalysis::loadCSV(const char* filename)
-{
+void SentimentAnalysis::loadCSV(const char* filename) {
     ifstream file(filename);
     if (!file.is_open()) {
         cout << "Error: Could not open file '" << filename << "'" << endl;
@@ -61,23 +60,18 @@ void SentimentAnalysis::loadCSV(const char* filename)
         string reviewText;
         int rating;
 
-        // Check if the review starts with a quote (indicating it might contain commas)
         if (line[0] == '"') {
             size_t endQuotePos = line.find_last_of('"');
-            // Extract the full review text between the quotes
             reviewText = line.substr(1, endQuotePos - 1);
-
-            // Extract the rating (assume it comes after the last quote and a comma)
-            string ratingStr = line.substr(endQuotePos + 2); // Skips the quote and comma
-            rating = stoi(ratingStr); // Convert to integer
+            string ratingStr = line.substr(endQuotePos + 2);
+            rating = stoi(ratingStr);
         }
         else {
-            // If no quotes, just use a normal comma-separated approach
-            getline(ss, reviewText, ','); // Read review text until the comma
-            ss >> rating;                 // Read rating
+            getline(ss, reviewText, ',');
+            ss >> rating;
         }
 
-        addReview(reviewText.c_str(), rating); // Add the review using addReview()
+        addReview(reviewText, rating);
     }
 
     file.close();
@@ -86,13 +80,31 @@ void SentimentAnalysis::loadCSV(const char* filename)
 // Add a review to the review list
 void SentimentAnalysis::addReview(const string& reviewText, int rating) {
     if (reviewCount < MAX_REVIEWS) {
-        reviewList[reviewCount].review = reviewText; // Safe assignment
+        reviewList[reviewCount].review = reviewText;
         reviewList[reviewCount].rating = rating;
         reviewCount++;
     }
     else {
-        cout << "Maximum number of reviews reached!" << endl; // Avoid overflow
+        cout << "Maximum number of reviews reached!" << endl;
     }
+}
+
+// Manually convert each character of the word to lowercase
+void SentimentAnalysis::toLowercase(string& word) {
+    for (char& ch : word) {
+        ch = tolower(ch);
+    }
+}
+
+// Removing Punctuations/Symbols
+void SentimentAnalysis::removePunctuation(string& word) {
+    word.erase(remove_if(word.begin(), word.end(), [](char ch) {
+        // Ensure the character is in the valid ASCII range
+        if (ch < 0 || ch > 255) {
+            return true; // Remove invalid characters
+        }
+        return !(isalpha(ch) || ch == '\''); // Keep only alphabetic characters and apostrophes
+        }), word.end());
 }
 
 // Check if a word exists in a list
@@ -109,15 +121,14 @@ bool SentimentAnalysis::wordExists(const string& word, const string wordList[], 
 void SentimentAnalysis::updateWordFrequency(const string& word) {
     for (int i = 0; i < uniqueWordCount; i++) {
         if (frequencyWords[i] == word) {
-            frequencyCounts[i]++; // Increment count if the word exists
+            frequencyCounts[i]++;
             return;
         }
     }
 
-    // If the word is not found, add it to the frequency lists
     if (uniqueWordCount < MAX_FREQUENCIES) {
         frequencyWords[uniqueWordCount] = word;
-        frequencyCounts[uniqueWordCount] = 1; // First occurrence
+        frequencyCounts[uniqueWordCount] = 1;
         uniqueWordCount++;
     }
 }
@@ -132,9 +143,10 @@ void SentimentAnalysis::analyzeSentimentReviews() {
         stringstream ss(reviewList[i].review);
         string word;
 
-        // Convert words to lowercase for case-insensitive comparison
+        // Process each word in the review
         while (ss >> word) {
-            std::transform(word.begin(), word.end(), word.begin(), ::tolower); // Lowercase transformation
+            toLowercase(word);         // Convert to lowercase
+            removePunctuation(word);   // Remove punctuation
 
             if (wordExists(word, positiveWords, positiveWordCount)) {
                 positiveCount++;
@@ -162,20 +174,18 @@ double SentimentAnalysis::calculateSentimentScore(int positiveCount, int negativ
     int rawSentimentScore = positiveCount - negativeCount;
     int totalWords = positiveCount + negativeCount;
 
-    // Avoid division by zero if no words are found
-    if (totalWords == 0) return 3.0; // Neutral if no words found
+    if (totalWords == 0) return 3.0;
 
     int minRawScore = -totalWords;
     int maxRawScore = totalWords;
 
-    // Normalize the score between 1 and 5
     double normalizedScore = static_cast<double>(rawSentimentScore - minRawScore) / (maxRawScore - minRawScore);
-    return 1 + (4 * normalizedScore); // Scale to 1 - 5
+    return 1 + (4 * normalizedScore);
 }
 
 // Compare sentiment score with user rating
 void SentimentAnalysis::compareSentimentWithRating(double sentimentScore, int userRating) {
-    int roundedSentimentScore = static_cast<int>(sentimentScore + 0.5); // Round to nearest integer
+    int roundedSentimentScore = static_cast<int>(sentimentScore + 0.5);
 
     if (roundedSentimentScore == userRating) {
         cout << "User's subjective evaluation matches the sentiment score." << endl;
@@ -204,20 +214,17 @@ void SentimentAnalysis::calculateOverallSentiment() {
         }
     }
 
-    // Output overall sentiment statistics
     cout << "Total Reviews: " << reviewCount << endl;
     cout << "Total Positive Words: " << totalPositiveWords << endl;
     cout << "Total Negative Words: " << totalNegativeWords << endl;
 
-    // Output word frequency
     cout << "Word Frequency:\n";
     for (int i = 0; i < uniqueWordCount; i++) {
         cout << frequencyWords[i] << " = " << frequencyCounts[i] << " times\n";
     }
 }
 
-// Destructor to clean up dynamically allocated memory
+// Destructor to clean up allocated memory
 SentimentAnalysis::~SentimentAnalysis() {
     delete[] reviewList; // Free allocated memory for reviews
-    cout << "All reviews deleted." << endl;
 }

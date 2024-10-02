@@ -16,6 +16,9 @@ using std::string;
 struct Review {
     string review;  // The text of the review
     int rating;     // The rating given by the user
+
+    Review() : review(""), rating(0) {} // Constructor to initialize members
+
 };
 
 class SentimentAnalysis {
@@ -39,6 +42,12 @@ public:
     // Load positive and negative words from files
     void loadPositiveWords();
     void loadNegativeWords();
+
+    // Change To Lower Case Words
+    void toLowercase(string& word);
+
+    // Remove Puntuations 
+    void removePunctuation(string& word);
 
     //Loaf CSV file
     void loadCSV(const char* filename);
