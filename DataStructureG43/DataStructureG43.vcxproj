@@ -127,10 +127,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="mainArray.cpp" />
+    <ClCompile Include="main_Array.cpp" />
+    <ClCompile Include="main_LinkedList.cpp" />
+    <ClCompile Include="SentimentAnalysisLinkedList.cpp" />
     <ClCompile Include="sentiment_analysis.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="SentimentAnalysis_LinkedList.hpp" />
     <ClInclude Include="sentiment_analysis.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
