@@ -46,6 +46,43 @@ void SentimentAnalysis::loadNegativeWords() {
     file.close();
 }
 
+// Load CSV File
+void SentimentAnalysis::loadCSV(const char* filename)
+{
+    ifstream file(filename);
+    if (!file.is_open()) {
+        cout << "Error: Could not open file '" << filename << "'" << endl;
+        return;
+    }
+
+    string line;
+    while (getline(file, line) && reviewCount < MAX_REVIEWS) {
+        stringstream ss(line);
+        string reviewText;
+        int rating;
+
+        // Check if the review starts with a quote (indicating it might contain commas)
+        if (line[0] == '"') {
+            size_t endQuotePos = line.find_last_of('"');
+            // Extract the full review text between the quotes
+            reviewText = line.substr(1, endQuotePos - 1);
+
+            // Extract the rating (assume it comes after the last quote and a comma)
+            string ratingStr = line.substr(endQuotePos + 2); // Skips the quote and comma
+            rating = stoi(ratingStr); // Convert to integer
+        }
+        else {
+            // If no quotes, just use a normal comma-separated approach
+            getline(ss, reviewText, ','); // Read review text until the comma
+            ss >> rating;                 // Read rating
+        }
+
+        addReview(reviewText.c_str(), rating); // Add the review using addReview()
+    }
+
+    file.close();
+}
+
 // Add a review to the review list
 void SentimentAnalysis::addReview(const string& reviewText, int rating) {
     if (reviewCount < MAX_REVIEWS) {

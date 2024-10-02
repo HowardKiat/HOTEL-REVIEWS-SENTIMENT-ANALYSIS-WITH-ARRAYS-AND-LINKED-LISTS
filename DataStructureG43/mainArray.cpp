@@ -9,7 +9,10 @@ int main() {
     analysis->loadPositiveWords();
     analysis->loadNegativeWords();
 
-    // Manually add some reviews for testing purposes
+    //Load Reviews from CSV files
+    analysis->loadCSV("tripadvisor_hotel_reviews.csv");
+
+    // Manually add some reviews for testing purposes (FOR TESTING USE - HOWARD :))
     analysis->addReview("This hotel is amazing and the service is great!", 5);
     analysis->addReview("The food was terrible, and the noise was unbearable.", 2);
     analysis->addReview("The location is perfect, highly recommended.", 5);

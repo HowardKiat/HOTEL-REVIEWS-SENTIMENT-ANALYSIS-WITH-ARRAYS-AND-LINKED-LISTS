@@ -40,6 +40,9 @@ public:
     void loadPositiveWords();
     void loadNegativeWords();
 
+    //Loaf CSV file
+    void loadCSV(const char* filename);
+
     // Add reviews manually (for testing)
     void addReview(const string& reviewText, int rating);
 
