@@ -11,8 +11,8 @@
 
 using std::string;
 
-// Define maximum sizes for word arrays
-#define MAX_WORDS 1000
+const int MAX_WORDS = 5000;         // Maximum number of positive/negative words
+const int MAX_FREQUENCIES = 1000;   // Maximum number of unique words to track frequency
 
 // Structure for a single review (linked list node)
 struct ReviewNode {
@@ -24,31 +24,22 @@ struct ReviewNode {
         : reviewText(text), rating(rate), next(nullptr) {}
 };
 
-// Structure for tracking word frequencies (linked list node)
-struct WordFrequencyNode {
-    string word;
-    int count;
-    WordFrequencyNode* next;
-
-    WordFrequencyNode(const string& w)
-        : word(w), count(1), next(nullptr) {}
-};
-
 class SentimentAnalysisLinkedList {
 private:
-    // Arrays for positive and negative words
-    string positiveWords[MAX_WORDS];
-    string negativeWords[MAX_WORDS];
+    // Pointers to arrays for positive and negative words (dynamically allocated)
+    string* positiveWords;
+    string* negativeWords;
     int positiveWordCount;
     int negativeWordCount;
+
+    // Arrays to track word frequency
+    string trackWordsFrequency[MAX_FREQUENCIES];    // Array to store the words
+    int trackWordFrequencyCounts[MAX_FREQUENCIES];  // Array to store the counts
+    int individualWordCount;
 
     // Linked list for storing reviews
     ReviewNode* reviewHead;
     int reviewCount;
-
-    // Linked list for tracking word frequencies
-    WordFrequencyNode* frequencyHead;
-    int individualWordCount;
 
 public:
     // Constructor
@@ -73,7 +64,6 @@ public:
     // Sentiment analysis
     void analyzeSentimentReviews();
     double calculateSentimentScore(int positiveCount, int negativeCount);
-    void compareSentimentWithRating(double sentimentScore, int userRating);
     void calculateOverallSentiment();
 
     // Destructor

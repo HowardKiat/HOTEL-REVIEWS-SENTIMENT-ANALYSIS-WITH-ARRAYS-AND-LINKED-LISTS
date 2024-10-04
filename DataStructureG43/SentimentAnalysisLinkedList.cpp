@@ -1,48 +1,54 @@
-// SentimentAnalysisLinkedList.cpp
-
-#include "Sentiment_Analysis_LinkedList.hpp"
+#include "SentimentAnalysisLinkedList.hpp"
+#include <iostream>
+#include <fstream>
 #include <sstream>
 #include <cctype>
 
 using namespace std;
 
-// Constructor
+// Constructor to initialize member variables
 SentimentAnalysisLinkedList::SentimentAnalysisLinkedList()
-    : positiveWordCount(0), negativeWordCount(0),
-    reviewHead(nullptr), reviewCount(0),
-    frequencyHead(nullptr), individualWordCount(0) {}
+    : reviewHead(nullptr), reviewCount(0), positiveWordCount(0), negativeWordCount(0), individualWordCount(0) {
+    // Initialize frequency counts to zero
+    for (int i = 0; i < MAX_FREQUENCIES; ++i) {
+        trackWordFrequencyCounts[i] = 0; // Initialize all counts to zero
+        trackWordsFrequency[i] = "";  // Initialize all words frequency to an empty string
+    }
 
-// Load positive words
+    // Dynamically allocate arrays for positive and negative words
+    positiveWords = new string[MAX_WORDS];
+    negativeWords = new string[MAX_WORDS];
+}
+
+// Load positive words from a text file
 void SentimentAnalysisLinkedList::loadPositiveWords(const char* filename) {
     ifstream file(filename);
     if (!file.is_open()) {
-        cout << "Error opening Positive Words File: " << filename << "!" << endl;
+        cout << "Error opening Positive Words File: " << filename << endl;
         return;
     }
 
-    string word;
-    while (positiveWordCount < MAX_WORDS && file >> word) {
-        positiveWords[positiveWordCount++] = word;
+    while (positiveWordCount < MAX_WORDS && file >> positiveWords[positiveWordCount]) {
+        positiveWordCount++;
     }
     file.close();
 }
 
-// Load negative words
 void SentimentAnalysisLinkedList::loadNegativeWords(const char* filename) {
     ifstream file(filename);
     if (!file.is_open()) {
-        cout << "Error opening Negative Words File: " << filename << "!" << endl;
+        cout << "Error opening Negative Words File: " << filename << endl;
         return;
     }
 
-    string word;
-    while (negativeWordCount < MAX_WORDS && file >> word) {
-        negativeWords[negativeWordCount++] = word;
+    while (negativeWordCount < MAX_WORDS && file >> negativeWords[negativeWordCount]) {
+        negativeWordCount++;
     }
     file.close();
 }
 
-// Load reviews from CSV
+
+// Load CSV File
 void SentimentAnalysisLinkedList::loadCSV(const char* filename) {
     ifstream file(filename);
     if (!file.is_open()) {
@@ -55,39 +61,16 @@ void SentimentAnalysisLinkedList::loadCSV(const char* filename) {
         string reviewText;
         int rating;
 
-        if (line.empty()) continue; // Skip empty lines
-
         if (line[0] == '"') {
             size_t endQuotePos = line.find_last_of('"');
-            if (endQuotePos == string::npos || endQuotePos == 0) {
-                cout << "Malformed line (quotes not closed): " << line << endl;
-                continue;
-            }
             reviewText = line.substr(1, endQuotePos - 1);
-            size_t commaPos = line.find(',', endQuotePos);
-            if (commaPos == string::npos) {
-                cout << "Malformed line (comma missing after quotes): " << line << endl;
-                continue;
-            }
-            string ratingStr = line.substr(commaPos + 1);
-            try {
-                rating = stoi(ratingStr);
-            }
-            catch (invalid_argument&) {
-                cout << "Invalid rating value: " << ratingStr << " in line: " << line << endl;
-                continue;
-            }
+            string ratingStr = line.substr(endQuotePos + 2);
+            rating = stoi(ratingStr);
         }
         else {
             stringstream ss(line);
-            if (!getline(ss, reviewText, ',')) {
-                cout << "Malformed line (unable to extract review text): " << line << endl;
-                continue;
-            }
-            if (!(ss >> rating)) {
-                cout << "Invalid rating in line: " << line << endl;
-                continue;
-            }
+            getline(ss, reviewText, ',');
+            ss >> rating;
         }
 
         addReview(reviewText, rating);
@@ -96,43 +79,41 @@ void SentimentAnalysisLinkedList::loadCSV(const char* filename) {
     file.close();
 }
 
-// Add a review
+// Add a review to the review list (Linked List)
 void SentimentAnalysisLinkedList::addReview(const string& reviewText, int rating) {
-    ReviewNode* newReview = new ReviewNode(reviewText, rating);
-    if (!reviewHead) {
-        reviewHead = newReview;
+    ReviewNode* newNode = new ReviewNode(reviewText, rating);
+    if (reviewHead == nullptr) {
+        reviewHead = newNode; // First review
     }
     else {
-        ReviewNode* temp = reviewHead;
-        while (temp->next) {
-            temp = temp->next;
+        ReviewNode* current = reviewHead;
+        while (current->next != nullptr) {
+            current = current->next;
         }
-        temp->next = newReview;
+        current->next = newNode; // Add at the end
     }
     reviewCount++;
 }
 
-// Convert to lowercase (Manual implementation without std::transform)
+// Convert each character of the word to lowercase
 void SentimentAnalysisLinkedList::toLowercase(string& word) {
-    for (size_t i = 0; i < word.length(); ++i) {
-        if (word[i] >= 'A' && word[i] <= 'Z') {
-            word[i] = word[i] + ('a' - 'A');
-        }
+    for (char& character : word) {
+        character = tolower(character);
     }
 }
 
-// Remove punctuation (Manual implementation without std::remove_if)
+// Removing Punctuations
 void SentimentAnalysisLinkedList::removePunctuation(string& word) {
-    string cleanedWord;
-    for (size_t i = 0; i < word.length(); ++i) {
-        if (isalpha(word[i]) || word[i] == '\'') {
-            cleanedWord += word[i];
+    word.erase(remove_if(word.begin(), word.end(), [](char character) {
+        // ASCII range
+        if (character < 0 || character > 255) {
+            return true;
         }
-    }
-    word = cleanedWord;
+        return !(isalpha(character) || character == '\'');
+        }), word.end());
 }
 
-// Check if word exists in list
+// Check if a word exists in a list
 bool SentimentAnalysisLinkedList::wordExists(const string& word, const string wordList[], int wordCount) {
     for (int i = 0; i < wordCount; ++i) {
         if (wordList[i] == word) {
@@ -142,130 +123,115 @@ bool SentimentAnalysisLinkedList::wordExists(const string& word, const string wo
     return false;
 }
 
-// Update word frequency
+// Update the count of the word frequency
 void SentimentAnalysisLinkedList::updateWordFrequency(const string& word) {
-    WordFrequencyNode* temp = frequencyHead;
-    WordFrequencyNode* prev = nullptr;
-
-    while (temp) {
-        if (temp->word == word) {
-            temp->count++;
+    for (int i = 0; i < individualWordCount; i++) {
+        if (trackWordsFrequency[i] == word) {
+            trackWordFrequencyCounts[i]++;
             return;
         }
-        prev = temp;
-        temp = temp->next;
     }
 
-    // Word not found, add new node
-    WordFrequencyNode* newWord = new WordFrequencyNode(word);
-    if (!frequencyHead) {
-        frequencyHead = newWord;
+    if (individualWordCount < MAX_FREQUENCIES) {
+        trackWordsFrequency[individualWordCount] = word;
+        trackWordFrequencyCounts[individualWordCount] = 1;
+        individualWordCount++;
     }
-    else {
-        prev->next = newWord;
-    }
-    individualWordCount++;
 }
 
-// Analyze sentiment
+// Analyze all reviews and calculate the sentiment score for each review
 void SentimentAnalysisLinkedList::analyzeSentimentReviews() {
     ReviewNode* current = reviewHead;
-    int index = 1;
-    while (current) {
+    while (current != nullptr) {
         int positiveCount = 0;
         int negativeCount = 0;
 
+        // Split text into individual words
         stringstream ss(current->reviewText);
         string word;
 
         while (ss >> word) {
-            toLowercase(word);
-            removePunctuation(word);
+            toLowercase(word);         // Convert to lowercase
+            removePunctuation(word);   // Remove punctuation
 
             if (wordExists(word, positiveWords, positiveWordCount)) {
                 positiveCount++;
-                updateWordFrequency(word);
+                updateWordFrequency(word); // Track frequency of positive words
             }
             else if (wordExists(word, negativeWords, negativeWordCount)) {
                 negativeCount++;
-                updateWordFrequency(word);
+                updateWordFrequency(word); // Track frequency of negative words
             }
         }
 
+        // Calculate the sentiment score
         double sentimentScore = calculateSentimentScore(positiveCount, negativeCount);
-        compareSentimentWithRating(sentimentScore, current->rating);
 
-        // Display review analysis
-        cout << "Review " << index++ << ":" << endl;
-        cout << "Text: " << current->reviewText << endl;
-        cout << "Rating: " << current->rating << endl;
+        // Output of the review sentiment analysis
+        cout << "Review: " << current->reviewText << endl;
         cout << "Positive words: " << positiveCount << ", Negative words: " << negativeCount << endl;
         cout << "Sentiment Score: " << sentimentScore << endl;
         cout << "-----------------------------------" << endl;
 
-        current = current->next;
+        current = current->next; // Move to the next review
     }
 }
 
-// Calculate sentiment score
+// Calculate sentiment score for a review
 double SentimentAnalysisLinkedList::calculateSentimentScore(int positiveCount, int negativeCount) {
     int rawSentimentScore = positiveCount - negativeCount;
     int totalWords = positiveCount + negativeCount;
 
-    if (totalWords == 0) return 3.0; // Neutral
+    if (totalWords == 0) return 3.0;
 
     int minRawScore = -totalWords;
     int maxRawScore = totalWords;
 
     double normalizedScore = static_cast<double>(rawSentimentScore - minRawScore) / (maxRawScore - minRawScore);
-    return 1 + (4 * normalizedScore); // Scale to [1,5]
+    return 1 + (4 * normalizedScore);
 }
 
-// Compare sentiment score with user rating
-void SentimentAnalysisLinkedList::compareSentimentWithRating(double sentimentScore, int userRating) {
-    int roundedScore = static_cast<int>(sentimentScore + 0.5);
-
-    if (roundedScore == userRating) {
-        cout << "User's subjective evaluation matches the sentiment score." << endl;
-    }
-    else {
-        cout << "User's subjective evaluation does not match the sentiment score. "
-            << "Sentiment Score: " << roundedScore << ", User Rating: " << userRating << endl;
-    }
-}
-
-// Calculate overall sentiment
+// Overall analysis across all of the reviews
 void SentimentAnalysisLinkedList::calculateOverallSentiment() {
-    int totalPositive = 0;
-    int totalNegative = 0;
+    int totalPositiveWords = 0;
+    int totalNegativeWords = 0;
 
     ReviewNode* current = reviewHead;
-    while (current) {
+    while (current != nullptr) {
         stringstream ss(current->reviewText);
         string word;
 
         while (ss >> word) {
-            toLowercase(word);
-            removePunctuation(word);
-
             if (wordExists(word, positiveWords, positiveWordCount)) {
-                totalPositive++;
+                totalPositiveWords++;
             }
             else if (wordExists(word, negativeWords, negativeWordCount)) {
-                totalNegative++;
+                totalNegativeWords++;
             }
         }
-
-        current = current->next;
+        current = current->next; // Move to the next review
     }
 
-    cout << "Overall Sentiment: " << endl;
-    cout << "Total Positive Words: " << totalPositive << endl;
-    cout << "Total Negative Words: " << totalNegative << endl;
+    cout << "Total Reviews: " << reviewCount << endl;
+    cout << "Total Positive Words: " << totalPositiveWords << endl;
+    cout << "Total Negative Words: " << totalNegativeWords << endl;
 
-    SentimentAnalysisLinkedList()::~SentimentAnalysisLinkedList()
-    {
-
+    cout << "Word Frequency:\n";
+    for (int i = 0; i < individualWordCount; i++) {
+        cout << trackWordsFrequency[i] << " = " << trackWordFrequencyCounts[i] << " times\n";
     }
 }
 
+// Destructor
+SentimentAnalysisLinkedList::~SentimentAnalysisLinkedList() {
+    // Free review nodes
+    while (reviewHead) {
+        ReviewNode* temp = reviewHead;
+        reviewHead = reviewHead->next;
+        delete temp;
+    }
+
+    // Free dynamically allocated word arrays
+    delete[] positiveWords;
+    delete[] negativeWords;
+}
