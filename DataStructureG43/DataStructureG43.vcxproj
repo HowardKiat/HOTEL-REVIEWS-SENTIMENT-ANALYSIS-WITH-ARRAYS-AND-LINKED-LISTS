@@ -127,14 +127,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main_Array.cpp" />
-    <ClCompile Include="main_LinkedList.cpp" />
-    <ClCompile Include="SentimentAnalysisLinkedList.cpp" />
-    <ClCompile Include="sentiment_analysis.cpp" />
+    <ClInclude Include="DynamicArray.hpp" />
+    <ClInclude Include="DoublyLinkedList.hpp" />
+    <ClInclude Include="WordList.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SentimentAnalysis_LinkedList.hpp" />
-    <ClInclude Include="sentiment_analysis.hpp" />
+    <ClCompile Include="DynamicArray.cpp" />
+    <ClCompile Include="SentimentAnalysisArray.cpp" />
+    <ClCompile Include="SentimentAnalysisLinkedList.cpp" />
+    <ClCompile Include="WordList.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
