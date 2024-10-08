@@ -1,3 +1,5 @@
+//THIS FILE WILL NOT BE USED - HOWARD
+
 //#include "DynamicArray.hpp"
 //#include <stdexcept> // for std::out_of_range
 //
@@ -8,7 +10,7 @@
 //
 //template <typename T>
 //DynamicArray<T>::~DynamicArray() {
-//    delete[] data;
+//    delete[] data; 
 //}
 //
 //template <typename T>
@@ -42,3 +44,5 @@
 //size_t DynamicArray<T>::getSize() const {
 //    return size;
 //}
+
+

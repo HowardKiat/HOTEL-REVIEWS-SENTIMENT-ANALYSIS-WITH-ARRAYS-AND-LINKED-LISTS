@@ -90,3 +90,4 @@ const T& DynamicArray<T>::operator[](size_t index) const {
 }
 
 #endif // DYNAMICARRAY_HPP
+
