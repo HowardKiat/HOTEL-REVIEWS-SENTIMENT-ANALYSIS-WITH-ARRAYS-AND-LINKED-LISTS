@@ -2,10 +2,12 @@
 #include <fstream>
 #include <string>
 #include <cctype>
+#include <chrono> 
 #include "DynamicArray.hpp" // Assuming your custom DynamicArray class exists
 #include "WordList.hpp"     // Assuming your custom WordList class exists
 
 using namespace std;
+using namespace std::chrono;
 
 void toLowercase(std::string& str) {
     for (char& c : str) {
@@ -22,27 +24,135 @@ void splitLine(const std::string& line, std::string& review, std::string& rating
     }
 }
 
+// Linear search function for checking if a word exists in the DynamicArray
+//bool linearSearch(const DynamicArray& wordArray, const std::string& word) {
+//    for (size_t i = 0; i < wordArray.getSize(); ++i) {
+//        if (wordArray.get(i) == word) {
+//            return true; // Word found
+//        }
+//    }
+//    return false; // Word not found
+//}
+
+// Binary search for a word in a sorted DynamicArray
+bool binarySearch(const DynamicArray& wordArray, const std::string& word) {
+    int left = 0;
+    int right = wordArray.getSize() - 1;
+
+    while (left <= right) {
+        int middle = left + (right - left) / 2;
+        if (wordArray.get(middle) == word) {
+            return true; // Word found
+        }
+        if (wordArray.get(middle) < word) {
+            left = middle + 1; // Search the right half
+        }
+        else {
+            right = middle - 1; // Search the left half
+        }
+    }
+    return false; // Word not found
+}
+
+// Bubble Sort to sort DynamicArray
+void bubbleSort(DynamicArray& wordArray) {
+    bool swapped;
+
+    do {
+        swapped = false;
+        for (size_t j = 0; j < wordArray.getSize() - 1; ++j) {
+            if (wordArray[j] > wordArray[j + 1]) {
+                // Swap the elements using operator[]
+                std::string temp = wordArray[j];
+                wordArray[j] = wordArray[j + 1];
+                wordArray[j + 1] = temp;
+                swapped = true; // A swap occurred
+            }
+        }
+    } while (swapped); // Continue as long as swaps are made
+}
+
 void collectSentimentWords(const std::string& cleanedReview,
-    const DynamicArray& positiveWords,
-    const DynamicArray& negativeWords,
+    DynamicArray& positiveWords,
+    DynamicArray& negativeWords,
     int& positiveCount,
     int& negativeCount,
     DynamicArray& collectedPositiveWords,
     DynamicArray& collectedNegativeWords) {
 
+    //linear search
+    // ----------------------------------------------------------------------------------------
+
+    // Collect positive words using linear search
+    //for (size_t k = 0; k < positiveWords.getSize(); ++k) {
+    //    if (cleanedReview.find(positiveWords.get(k)) != std::string::npos) {
+    //        if (linearSearch(positiveWords, positiveWords.get(k))) {
+    //            positiveCount++;
+    //            collectedPositiveWords.push_back(positiveWords.get(k));
+    //        }
+    //    }
+    //}
+
+    //// Collect negative words using linear search
+    //for (size_t k = 0; k < negativeWords.getSize(); ++k) {
+    //    if (cleanedReview.find(negativeWords.get(k)) != std::string::npos) {
+    //        if (linearSearch(negativeWords, negativeWords.get(k))) {
+    //            negativeCount++;
+    //            collectedNegativeWords.push_back(negativeWords.get(k));
+    //        }
+    //    }
+    //}
+
+    // binary search (without sort)
+    // ----------------------------------------------------------------------------------------
+
+    // Collect positive words using binary search
+    //for (size_t k = 0; k < positiveWords.getSize(); ++k) {
+    //    if (cleanedReview.find(positiveWords.get(k)) != std::string::npos) {
+    //        if (binarySearch(positiveWords, positiveWords.get(k))) {
+    //            positiveCount++;
+    //            collectedPositiveWords.push_back(positiveWords.get(k));
+    //        }
+    //    }
+    //}
+
+    //// Collect negative words using binary search
+    //for (size_t k = 0; k < negativeWords.getSize(); ++k) {
+    //    if (cleanedReview.find(negativeWords.get(k)) != std::string::npos) {
+    //        if (binarySearch(negativeWords, negativeWords.get(k))) {
+    //            negativeCount++;
+    //            collectedNegativeWords.push_back(negativeWords.get(k));
+    //        }
+    //    }
+    //}
+
+    // binary search (with sort)
+    // ----------------------------------------------------------------------------------------
+
+    // Sort both arrays before searching
+    bubbleSort(positiveWords);
+    bubbleSort(negativeWords);
+
+    // Collect positive words using binary search
     for (size_t k = 0; k < positiveWords.getSize(); ++k) {
         if (cleanedReview.find(positiveWords.get(k)) != std::string::npos) {
-            positiveCount++;
-            collectedPositiveWords.push_back(positiveWords.get(k));
+            if (binarySearch(positiveWords, positiveWords.get(k))) {
+                positiveCount++;
+                collectedPositiveWords.push_back(positiveWords.get(k));
+            }
         }
     }
 
+    // Collect negative words using binary search
     for (size_t k = 0; k < negativeWords.getSize(); ++k) {
         if (cleanedReview.find(negativeWords.get(k)) != std::string::npos) {
-            negativeCount++;
-            collectedNegativeWords.push_back(negativeWords.get(k));
+            if (binarySearch(negativeWords, negativeWords.get(k))) {
+                negativeCount++;
+                collectedNegativeWords.push_back(negativeWords.get(k));
+            }
         }
     }
+
 }
 
 void printCollectedWords(const DynamicArray& collectedWords, const std::string& type) {
@@ -99,6 +209,10 @@ int main() {
     }
 
     std::string line;
+
+    // Start the timer
+    auto start = high_resolution_clock::now();
+
     while (std::getline(reviewFile, line)) {
         std::string review;
         std::string ratingStr;
@@ -138,6 +252,13 @@ int main() {
             std::cout << "User's subjective evaluation matches the sentiment score.\n" << std::endl;
         }
     }
+
+    // Stop the timer
+    auto stop = high_resolution_clock::now();
+
+    // Calculate the duration and print the execution time in seconds
+    auto duration = duration_cast<milliseconds>(stop - start);
+    cout << "Time execution for this searching algorithm: " << duration.count() << " milliseconds." << "\n" << endl;
 
     return 0;
 }
