@@ -55,3 +55,4 @@ int WordFrequency::findMinFrequency() const {
     }
     return minFrequency;
 }
+
