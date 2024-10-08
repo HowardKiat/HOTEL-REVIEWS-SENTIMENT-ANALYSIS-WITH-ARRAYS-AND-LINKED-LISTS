@@ -2,8 +2,11 @@
 #include <fstream>
 #include <string>
 #include <cctype>
+#include <stdexcept>
+#include <chrono> // For measuring time
 #include "DynamicArray.hpp" // Assuming your custom DynamicArray class exists
 #include "WordList.hpp"     // Assuming your custom WordList class exists
+#include "WordFrequency.hpp" // Include the custom WordFrequency class
 
 using namespace std;
 
@@ -23,12 +26,12 @@ void splitLine(const std::string& line, std::string& review, std::string& rating
 }
 
 void collectSentimentWords(const std::string& cleanedReview,
-    const DynamicArray& positiveWords,
-    const DynamicArray& negativeWords,
+    const DynamicArray<std::string>& positiveWords, // Correct template usage
+    const DynamicArray<std::string>& negativeWords, // Correct template usage
     int& positiveCount,
     int& negativeCount,
-    DynamicArray& collectedPositiveWords,
-    DynamicArray& collectedNegativeWords) {
+    DynamicArray<std::string>& collectedPositiveWords, // Correct template usage
+    DynamicArray<std::string>& collectedNegativeWords) { // Correct template usage
 
     for (size_t k = 0; k < positiveWords.getSize(); ++k) {
         if (cleanedReview.find(positiveWords.get(k)) != std::string::npos) {
@@ -45,7 +48,7 @@ void collectSentimentWords(const std::string& cleanedReview,
     }
 }
 
-void printCollectedWords(const DynamicArray& collectedWords, const std::string& type) {
+void printCollectedWords(const DynamicArray<std::string>& collectedWords, const std::string& type) {
     std::cout << type << " Words = " << collectedWords.getSize() << ":\n";
     for (size_t i = 0; i < collectedWords.getSize(); ++i) {
         std::cout << "-" << collectedWords.get(i) << "\n";
@@ -73,23 +76,34 @@ double calculateSentimentScore(int positiveCount, int negativeCount) {
 }
 
 // Function to load words from a file
-void loadWords(const std::string& filename, DynamicArray& wordArray) {
+void loadWords(const std::string& filename, DynamicArray<std::string>& wordArray) { // Correct template usage
+    auto start = std::chrono::high_resolution_clock::now();
+
     std::ifstream file(filename);
     if (!file.is_open()) {
         std::cerr << "Failed to open file: " << filename << std::endl;
         return;
     }
+
     std::string word;
     while (file >> word) {
         wordArray.push_back(word);
+        std::cout << "Loaded word: " << word << std::endl; // Print loaded words
     }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+    std::cout << "Time taken to load words from " << filename << ": " << elapsed.count() << " seconds.\n";
 }
 
 int main() {
-    DynamicArray positiveWords;
-    DynamicArray negativeWords;
+    DynamicArray<std::string> positiveWords; // Correct template usage
+    DynamicArray<std::string> negativeWords; // Correct template usage
 
+    std::cout << "Loading positive words...\n";
     loadWords("positive-words.txt", positiveWords);
+
+    std::cout << "Loading negative words...\n";
     loadWords("negative-words.txt", negativeWords);
 
     std::ifstream reviewFile("tripadvisor_hotel_reviews.csv");
@@ -99,6 +113,9 @@ int main() {
     }
 
     std::string line;
+    int totalPositiveWords = 0, totalNegativeWords = 0, totalReviews = 0;
+    WordFrequency wordFrequency; // Use the custom word frequency class
+
     while (std::getline(reviewFile, line)) {
         std::string review;
         std::string ratingStr;
@@ -110,7 +127,7 @@ int main() {
         try {
             userRating = std::stoi(ratingStr); // Convert rating string to integer
         }
-        catch (const std::invalid_argument& e) {
+        catch (const std::invalid_argument&) {
             std::cerr << "Invalid rating format: " << ratingStr << std::endl;
             continue; // Skip this line if rating conversion fails
         }
@@ -119,16 +136,26 @@ int main() {
         std::cout << "Analyzing review: " << review << " | User Rating: " << userRating << std::endl;
 
         int positiveCount = 0, negativeCount = 0;
-        DynamicArray collectedPositiveWords;
-        DynamicArray collectedNegativeWords;
+        DynamicArray<std::string> collectedPositiveWords; // Correct template usage
+        DynamicArray<std::string> collectedNegativeWords; // Correct template usage
 
         collectSentimentWords(review, positiveWords, negativeWords, positiveCount, negativeCount, collectedPositiveWords, collectedNegativeWords);
+
         printCollectedWords(collectedPositiveWords, "Positive");
         printCollectedWords(collectedNegativeWords, "Negative");
 
+        // Add counts to the WordFrequency object
+        for (size_t k = 0; k < collectedPositiveWords.getSize(); ++k) {
+            wordFrequency.addWord(collectedPositiveWords.get(k));
+        }
+
+        for (size_t k = 0; k < collectedNegativeWords.getSize(); ++k) {
+            wordFrequency.addWord(collectedNegativeWords.get(k));
+        }
+
         // Calculate the normalized sentiment score
         double sentimentScore = calculateSentimentScore(positiveCount, negativeCount);
-        std::cout << "Sentiment score (1-5): " << sentimentScore << std::endl;
+        std::cout << "Sentiment score (1 - 5): " << sentimentScore << std::endl;
 
         // Compare the sentiment score with the user rating
         if ((sentimentScore > 3 && userRating < 3) || (sentimentScore < 3 && userRating > 3)) {
@@ -137,7 +164,35 @@ int main() {
         else {
             std::cout << "User's subjective evaluation matches the sentiment score.\n" << std::endl;
         }
+
+        // Update overall counts
+        totalPositiveWords += positiveCount;
+        totalNegativeWords += negativeCount;
+        totalReviews++;
     }
 
-    return 0;
+    // Print overall sentiment statistics
+    std::cout << "-----------------------------------\n";
+    std::cout << "Review Analysis Summary:\n";
+    std::cout << "-----------------------------------\n";
+    std::cout << "Total Reviews: " << totalReviews << "\n";
+    std::cout << "Total Positive Words: " << totalPositiveWords << "\n";
+    std::cout << "Total Negative Words: " << totalNegativeWords << "\n";
+    std::cout << "-----------------------------------\n";
+
+    // Frequency of each word
+    std::cout << "Frequency of each word used in overall reviews:\n";
+    for (int i = 0; i < wordFrequency.getSize(); ++i) {
+        std::cout << wordFrequency.getWord(i) << ": " << wordFrequency.getCount(wordFrequency.getWord(i)) << std::endl;
+    }
+
+    // Find and print maximum frequency
+    int maxFrequency = wordFrequency.findMaxFrequency();
+    std::cout << "Maximum Frequency: " << maxFrequency << std::endl;
+
+    // Find and print minimum frequency
+    int minFrequency = wordFrequency.findMinFrequency();
+    std::cout << "Minimum Frequency: " << minFrequency << std::endl;
+
+    return 0; // Return success
 }
