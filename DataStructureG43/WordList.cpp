@@ -128,3 +128,4 @@ bool WordList::containsInList(const std::string& word) const {
     }
     return false; // Word not found
 }
+
