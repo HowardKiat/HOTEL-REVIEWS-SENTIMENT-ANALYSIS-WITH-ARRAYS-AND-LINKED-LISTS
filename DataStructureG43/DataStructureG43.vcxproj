@@ -129,12 +129,14 @@
   <ItemGroup>
     <ClInclude Include="DynamicArray.hpp" />
     <ClInclude Include="DoublyLinkedList.hpp" />
+    <ClInclude Include="WordFrequency.hpp" />
     <ClInclude Include="WordList.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DynamicArray.cpp" />
     <ClCompile Include="SentimentAnalysisArray.cpp" />
     <ClCompile Include="SentimentAnalysisLinkedList.cpp" />
+    <ClCompile Include="WordFrequency.cpp" />
     <ClCompile Include="WordList.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

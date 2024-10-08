@@ -24,6 +24,9 @@
     <ClInclude Include="WordList.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="WordFrequency.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SentimentAnalysisArray.cpp">
@@ -36,6 +39,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WordList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WordFrequency.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
