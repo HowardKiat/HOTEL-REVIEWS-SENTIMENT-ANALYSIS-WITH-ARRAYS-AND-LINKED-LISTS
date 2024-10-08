@@ -1,104 +1,129 @@
-#include "WordList.hpp"
 #include <iostream>
 #include <fstream>
-#include <sstream>
+#include <stdexcept>
+#include "WordList.hpp"
 
-// Constructor
-WordList::WordList() : head(nullptr) {}
+using namespace std;
 
-// Destructor
+void WordList::loadWords(const std::string& filename, std::string*& wordArray, int& wordCount, int& wordCapacity) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        throw runtime_error("Could not open file: " + filename);
+    }
+
+    string line;
+    wordCount = 0;
+
+    while (getline(file, line)) {
+        if (line.empty()) continue;
+
+        if (wordCount >= wordCapacity) {
+            wordCapacity *= 2;  // Doubling capacity
+            std::string* newArray = new std::string[wordCapacity];
+            for (int i = 0; i < wordCount; ++i) {
+                newArray[i] = wordArray[i];
+            }
+            delete[] wordArray;
+            wordArray = newArray;
+        }
+
+        wordArray[wordCount++] = line;
+    }
+    file.close();
+}
+
+WordList::WordList() : head(nullptr), positiveWords(nullptr), negativeWords(nullptr), positiveCount(0), negativeCount(0), positiveCapacity(100), negativeCapacity(100) {
+    positiveWords = new std::string[positiveCapacity];
+    negativeWords = new std::string[negativeCapacity];
+}
+
 WordList::~WordList() {
     WordNode* current = head;
     while (current) {
-        WordNode* next = current->next; // Store next node
-        delete current;                  // Delete current node
-        current = next;                  // Move to the next node
+        WordNode* next = current->next;
+        delete current;
+        current = next;
     }
+    delete[] positiveWords;
+    delete[] negativeWords;
 }
 
-// Add a word to the linked list
+void WordList::loadPositiveWords(const std::string& filename) {
+    loadWords(filename, positiveWords, positiveCount, positiveCapacity);
+}
+
+void WordList::loadNegativeWords(const std::string& filename) {
+    loadWords(filename, negativeWords, negativeCount, negativeCapacity);
+}
+
 void WordList::addWord(const std::string& word) {
     WordNode* current = head;
-    WordNode* prev = nullptr;
-
-    // Traverse the list to find the word
     while (current) {
         if (current->word == word) {
-            current->count++; // Increment count if found
-            return;          // Exit if found
+            current->count++;
+            return;
         }
-        prev = current;       // Keep track of previous node
-        current = current->next; // Move to next node
+        current = current->next;
     }
 
-    // Create a new node if the word wasn't found
     WordNode* newNode = new WordNode(word);
-    if (prev) {
-        prev->next = newNode; // Link new node to the list
-    }
-    else {
-        head = newNode; // If this is the first node
-    }
+    newNode->next = head;
+    head = newNode;
 }
 
-// Display counts of each word
-void WordList::displayCounts() {
-    WordNode* current = head;
-    while (current) {
-        std::cout << current->word << " = " << current->count << " times" << std::endl;
-        current = current->next; // Move to the next node
-    }
+void WordList::displayCounts() const {
+    cout << "Positive Words Count: " << positiveCount << endl;
+    cout << "Negative Words Count: " << negativeCount << endl;
 }
 
-// Analyze word frequencies
-void WordList::analyzeFrequencies(int& positiveCount, int& negativeCount) {
-    positiveCount = 0; // Reset counts
-    negativeCount = 0;
-    WordNode* current = head;
-
-    // Traverse the list to analyze frequencies
-    while (current) {
-        if (isPositive(current->word)) {
-            positiveCount += current->count; // Increment positive count
-        }
-        else if (isNegative(current->word)) {
-            negativeCount += current->count; // Increment negative count
-        }
-        current = current->next; // Move to the next node
-    }
+void WordList::analyzeFrequencies(int& posCount, int& negCount) const {
+    posCount = positiveCount;
+    negCount = negativeCount;
 }
 
-// Find maximum and minimum words
 void WordList::findMaxMinWords(std::string& maxWord, int& maxCount, std::string& minWord, int& minCount) {
+    maxCount = 0;
+    minCount = INT_MAX;
+
     WordNode* current = head;
-    if (!current) return; // Return if the list is empty
-
-    maxWord = current->word;
-    maxCount = current->count;
-    minWord = current->word;
-    minCount = current->count;
-
-    // Traverse the list to find max/min counts
     while (current) {
         if (current->count > maxCount) {
-            maxWord = current->word;
             maxCount = current->count;
+            maxWord = current->word;
         }
         if (current->count < minCount) {
-            minWord = current->word;
             minCount = current->count;
+            minWord = current->word;
         }
-        current = current->next; // Move to the next node
+        current = current->next;
     }
 }
 
-// Implement the isPositive and isNegative functions based on your positive/negative words list
-bool WordList::isPositive(const std::string& word) {
-    // Implement your logic here
-    return false; // Placeholder
+bool WordList::isPositive(const std::string& word) const {
+    for (int i = 0; i < positiveCount; ++i) {
+        if (positiveWords[i] == word) {
+            return true;
+        }
+    }
+    return false;
 }
 
-bool WordList::isNegative(const std::string& word) {
-    // Implement your logic here
-    return false; // Placeholder
+bool WordList::isNegative(const std::string& word) const {
+    for (int i = 0; i < negativeCount; ++i) {
+        if (negativeWords[i] == word) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool WordList::containsInList(const std::string& word) const {
+    WordNode* current = head;
+    while (current) {
+        if (current->word == word) {
+            return true;
+        }
+        current = current->next;
+    }
+    return false;
 }
